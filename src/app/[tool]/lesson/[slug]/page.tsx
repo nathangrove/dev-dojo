@@ -2,30 +2,26 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { allLessons, getLesson } from "@/lib/curriculum";
+import { allLessons, getLesson } from "@/lib/dojo";
 import Markdownish from "@/components/Markdownish";
 import LessonPlayer from "@/components/LessonPlayer";
 
-export function generateStaticParams() {
-  return allLessons().map((ref) => ({ slug: ref.lesson.slug }));
+interface Params {
+  params: Promise<{ tool: string; slug: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const ref = getLesson(slug);
+export function generateStaticParams() {
+  return allLessons().map((ref) => ({ tool: ref.track.slug, slug: ref.lesson.slug }));
+}
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { tool, slug } = await params;
+  const ref = getLesson(tool, slug);
   if (!ref) return { title: "Not found" };
   return { title: ref.lesson.title, description: ref.lesson.tagline };
 }
 
-export default function LessonPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default function LessonPage({ params }: Params) {
   return (
     <Suspense fallback={<LessonFallback />}>
       <LessonContent params={params} />
@@ -33,13 +29,9 @@ export default function LessonPage({
   );
 }
 
-async function LessonContent({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const ref = getLesson(slug);
+async function LessonContent({ params }: Params) {
+  const { tool, slug } = await params;
+  const ref = getLesson(tool, slug);
   if (!ref) notFound();
   const { category, lesson } = ref;
 
@@ -47,7 +39,7 @@ async function LessonContent({
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-3">
         <Link
-          href={`/category/${category.slug}`}
+          href={`/${tool}/category/${category.slug}`}
           className="w-fit text-xs text-muted transition-colors hover:text-foreground"
         >
           ← {category.title}
@@ -80,7 +72,7 @@ async function LessonContent({
 
       <section className="flex flex-col gap-4">
         <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted">Practice</h2>
-        <LessonPlayer lesson={lesson} category={category} />
+        <LessonPlayer toolSlug={tool} lesson={lesson} category={category} />
       </section>
     </div>
   );

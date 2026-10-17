@@ -1,11 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import type { Category } from "@/lib/curriculum";
+import type { Category } from "@/lib/dojo";
 import { useProgress, computeLessonProgress } from "@/lib/progress";
 import ProgressBar from "./ProgressBar";
 
-export default function CategoryLessons({ category }: { category: Category }) {
+export default function CategoryLessons({
+  toolSlug,
+  category,
+}: {
+  toolSlug: string;
+  category: Category;
+}) {
   const { progress } = useProgress();
 
   const ids = category.lessons.flatMap((l) => l.drills.map((d) => d.id));
@@ -14,7 +20,10 @@ export default function CategoryLessons({ category }: { category: Category }) {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
-        <Link href="/" className="w-fit text-xs text-muted transition-colors hover:text-foreground">
+        <Link
+          href={`/${toolSlug}`}
+          className="w-fit text-xs text-muted transition-colors hover:text-foreground"
+        >
           ← All skills
         </Link>
         <div className="flex items-center gap-3">
@@ -43,7 +52,7 @@ export default function CategoryLessons({ category }: { category: Category }) {
           return (
             <li key={lesson.slug}>
               <Link
-                href={`/lesson/${lesson.slug}`}
+                href={`/${toolSlug}/lesson/${lesson.slug}`}
                 className="group flex items-center gap-4 rounded-xl border border-border bg-panel p-4 transition-colors hover:border-accent/60"
               >
                 <span className="font-mono text-sm text-muted">{String(i + 1).padStart(2, "0")}</span>

@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { isGoal, normalizeText, stateText, handleKey } from "../engine/vim";
-import { createSeeded } from "../engine/session";
-import { evaluateGoal } from "../engine/goals";
-import type { Drill } from "./types";
-import type { VimState } from "../engine/types";
-import { allDrills, allLessons, parseKeys, solutionLength } from "./index";
+import { parseKeys, solutionLength } from "@/lib/dojo/tokens";
+import { isGoal, normalizeText, stateText, handleKey } from "./engine/vim";
+import { createSeeded } from "./engine/session";
+import { evaluateGoal } from "./engine/goals";
+import type { VimDrill } from "./types";
+import type { VimState } from "./engine/types";
+import { VIM_CATEGORIES } from "./curriculum";
 
-function buildState(drill: Drill): VimState {
+const drills = VIM_CATEGORIES.flatMap((category) =>
+  category.lessons.flatMap((lesson) => lesson.drills.map((drill) => ({ category, lesson, drill }))),
+);
+
+function buildState(drill: VimDrill): VimState {
   return createSeeded(drill.initial, drill.files, drill.start, drill.startModified);
 }
 
@@ -16,9 +21,7 @@ function applySolution(state: VimState, solution: string): VimState {
   return s;
 }
 
-describe("curriculum validity", () => {
-  const drills = allDrills();
-
+describe("vim curriculum validity", () => {
   it("has a healthy number of drills", () => {
     expect(drills.length).toBeGreaterThanOrEqual(30);
   });
@@ -26,7 +29,7 @@ describe("curriculum validity", () => {
   it("uses unique drill ids and lesson slugs", () => {
     const ids = drills.map((d) => d.drill.id);
     expect(new Set(ids).size).toBe(ids.length);
-    const lessonSlugs = allLessons().map((ref) => ref.lesson.slug);
+    const lessonSlugs = VIM_CATEGORIES.flatMap((c) => c.lessons.map((l) => l.slug));
     expect(new Set(lessonSlugs).size).toBe(lessonSlugs.length);
   });
 

@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { type Category, type Lesson, allLessons } from "@/lib/curriculum";
+import { type Category, type Lesson, allLessons } from "@/lib/dojo";
 import { useProgress, computeLessonProgress } from "@/lib/progress";
 import type { AttemptResult } from "@/lib/progress";
-import Practice from "./Practice";
+import ToolRunner from "./ToolRunner";
 
 interface LessonPlayerProps {
+  toolSlug: string;
   lesson: Lesson;
   category: Category;
 }
 
-export default function LessonPlayer({ lesson, category }: LessonPlayerProps) {
+export default function LessonPlayer({ toolSlug, lesson, category }: LessonPlayerProps) {
   const { progress, record } = useProgress();
   const [index, setIndex] = useState(0);
 
@@ -20,7 +21,7 @@ export default function LessonPlayer({ lesson, category }: LessonPlayerProps) {
   const finished = index >= drills.length;
   const current = drills[index] ?? drills[drills.length - 1];
 
-  const refs = allLessons();
+  const refs = allLessons().filter((r) => r.track.slug === toolSlug);
   const pos = refs.findIndex((r) => r.lesson.slug === lesson.slug);
   const nextRef = pos >= 0 ? refs[pos + 1] : undefined;
 
@@ -29,7 +30,8 @@ export default function LessonPlayer({ lesson, category }: LessonPlayerProps) {
   };
 
   if (finished) {
-    const lp = computeLessonProgress(      progress,
+    const lp = computeLessonProgress(
+      progress,
       drills.map((d) => d.id),
     );
     return (
@@ -78,14 +80,14 @@ export default function LessonPlayer({ lesson, category }: LessonPlayerProps) {
             Practice again
           </button>
           <Link
-            href={`/category/${category.slug}`}
+            href={`/${toolSlug}/category/${category.slug}`}
             className="rounded-md px-2 py-2 text-sm text-muted transition-colors hover:text-foreground"
           >
             ← {category.title}
           </Link>
           {nextRef && (
             <Link
-              href={`/lesson/${nextRef.lesson.slug}`}
+              href={`/${toolSlug}/lesson/${nextRef.lesson.slug}`}
               className="ml-auto rounded-md bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
             >
               Next: {nextRef.lesson.title} →
@@ -97,8 +99,9 @@ export default function LessonPlayer({ lesson, category }: LessonPlayerProps) {
   }
 
   return (
-    <Practice
+    <ToolRunner
       key={current.id}
+      toolSlug={toolSlug}
       drill={current}
       drillNumber={index + 1}
       drillTotal={drills.length}

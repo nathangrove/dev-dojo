@@ -14,7 +14,8 @@ export interface DrillProgress {
 
 export type ProgressMap = Record<string, DrillProgress>;
 
-const STORAGE_KEY = "vim-dojo-progress-v1";
+const STORAGE_KEY = "dev-dojo-progress-v1";
+const LEGACY_STORAGE_KEY = "vim-dojo-progress-v1";
 const EMPTY: ProgressMap = {};
 
 export interface AttemptResult {
@@ -26,6 +27,11 @@ export interface AttemptResult {
 export function loadProgress(): ProgressMap {
   if (typeof window === "undefined") return {};
   try {
+    // migrate progress from the pre-"Dev Dojo" key once
+    const legacy = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!window.localStorage.getItem(STORAGE_KEY) && legacy) {
+      window.localStorage.setItem(STORAGE_KEY, legacy);
+    }
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as ProgressMap;

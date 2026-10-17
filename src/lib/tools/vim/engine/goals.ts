@@ -1,8 +1,8 @@
-import type { SessionGoal } from "../curriculum/types";
+import type { VimGoal } from "../types";
 import { activeBuffer, activeTab } from "./session";
 import type { SplitNode, VimState } from "./types";
 
-export function evaluateGoal(state: VimState, goal: SessionGoal): boolean {
+export function evaluateGoal(state: VimState, goal: VimGoal): boolean {
   switch (goal.kind) {
     case "windowCount":
       return countWindows(state) === goal.count;
@@ -44,7 +44,7 @@ export function countWindows(state: VimState): number {
   return walk(activeTab(state).layout);
 }
 
-export function describeGoal(goal: SessionGoal): string {
+export function describeGoal(goal: VimGoal): string {
   switch (goal.kind) {
     case "windowCount":
       return `${goal.count} window${goal.count === 1 ? "" : "s"} open`;
@@ -69,6 +69,6 @@ export function describeGoal(goal: SessionGoal): string {
   }
 }
 
-export function isSessionDrill(goal: SessionGoal | undefined): boolean {
+export function isSessionDrill(goal: VimGoal | undefined): boolean {
   return goal !== undefined;
 }

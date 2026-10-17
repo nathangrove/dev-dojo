@@ -1,29 +1,27 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { CATEGORIES, getCategory } from "@/lib/curriculum";
+import { TRACKS, getCategory, getTrack } from "@/lib/dojo";
 import CategoryLessons from "@/components/CategoryLessons";
 
-export function generateStaticParams() {
-  return CATEGORIES.map((category) => ({ slug: category.slug }));
+interface Params {
+  params: Promise<{ tool: string; slug: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const category = getCategory(slug);
+export function generateStaticParams() {
+  return TRACKS.flatMap((track) =>
+    track.categories.map((category) => ({ tool: track.slug, slug: category.slug })),
+  );
+}
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { tool, slug } = await params;
+  const category = getCategory(tool, slug);
   if (!category) return { title: "Not found" };
   return { title: category.title, description: category.blurb };
 }
 
-export default function CategoryPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default function CategoryPage({ params }: Params) {
   return (
     <Suspense fallback={<CategoryFallback />}>
       <CategoryContent params={params} />
@@ -31,15 +29,12 @@ export default function CategoryPage({
   );
 }
 
-async function CategoryContent({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const category = getCategory(slug);
-  if (!category) notFound();
-  return <CategoryLessons category={category} />;
+async function CategoryContent({ params }: Params) {
+  const { tool, slug } = await params;
+  const track = getTrack(tool);
+  const category = getCategory(tool, slug);
+  if (!track || !category) notFound();
+  return <CategoryLessons toolSlug={tool} category={category} />;
 }
 
 function CategoryFallback() {

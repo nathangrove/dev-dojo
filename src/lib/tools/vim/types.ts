@@ -1,7 +1,4 @@
-export interface KeyRef {
-  keys: string;
-  meaning: string;
-}
+import type { BaseDrill } from "@/lib/dojo/types";
 
 /** A file to seed into the session when the drill starts. */
 export interface SeedFile {
@@ -13,7 +10,7 @@ export interface SeedFile {
  * A goal about the *session* (windows, buffers, tabs, registers) rather than
  * the buffer text. Used by window / file / tab / register drills.
  */
-export type SessionGoal =
+export type VimGoal =
   | { kind: "windowCount"; count: number }
   | { kind: "activeFile"; name: string }
   | { kind: "openFiles"; names: string[] }
@@ -24,9 +21,7 @@ export type SessionGoal =
   | { kind: "register"; name: string; text: string }
   | { kind: "cursorInFile"; name: string; row: number; col: number };
 
-export interface Drill {
-  id: string;
-  prompt: string;
+export interface VimDrill extends BaseDrill {
   initial: string;
   /** seed extra buffers so the drill can talk about files/tabs */
   files?: SeedFile[];
@@ -39,26 +34,9 @@ export interface Drill {
   /** cursor-goal: cursor must reach this cell (text is unchanged) */
   targetCursor?: { row: number; col: number };
   /** session-goal: the session must reach this state */
-  goal?: SessionGoal;
-  /** canonical solution, shown as a hint and used to score accuracy */
-  solution: string;
-  /** keys that must appear in the user's input for the drill to count as solved */
-  mustUse?: string[];
+  goal?: VimGoal;
 }
 
-export interface Lesson {
-  slug: string;
-  title: string;
-  tagline: string;
-  concept: string;
-  keys: KeyRef[];
-  drills: Drill[];
-}
-
-export interface Category {
-  slug: string;
-  title: string;
-  blurb: string;
-  accent: string;
-  lessons: Lesson[];
-}
+/** Backwards-compatible aliases. */
+export type Drill = VimDrill;
+export type SessionGoal = VimGoal;

@@ -1,4 +1,4 @@
-import type { Mode } from "@/lib/engine/types";
+import type { Mode } from "@/lib/tools/vim/engine/types";
 
 export interface Cell {
   ch: string;

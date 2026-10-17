@@ -1,6 +1,7 @@
-import type { Category } from "./types";
+import type { Category } from "@/lib/dojo/types";
+import type { VimDrill } from "./types";
 
-export const CATEGORIES: Category[] = [
+export const VIM_CATEGORIES: Category<VimDrill>[] = [
   {
     slug: "motions",
     title: "Motions",

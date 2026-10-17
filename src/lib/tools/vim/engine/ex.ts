@@ -208,7 +208,7 @@ export function executeEx(state: VimState, input: string): VimState {
     case "set":
       return msg(state, `set ${arg}`);
     case "help":
-      return msg(state, "Vim Dojo has no help — you are the help.");
+      return msg(state, "Dev Dojo has no help — you are the help.");
     default:
       return msg(state, `E492: Not an editor command: ${rawCmd}`);
   }

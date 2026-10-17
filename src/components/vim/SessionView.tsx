@@ -1,7 +1,7 @@
 "use client";
 
-import type { SplitNode, VimState } from "@/lib/engine/types";
-import { activeTab, activeWindow, findBuffer } from "@/lib/engine/session";
+import type { SplitNode, VimState } from "@/lib/tools/vim/engine/types";
+import { activeTab, activeWindow, findBuffer } from "@/lib/tools/vim/engine/session";
 import VimBuffer from "./VimBuffer";
 
 interface SessionViewProps {
