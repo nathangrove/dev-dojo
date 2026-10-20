@@ -62,7 +62,13 @@ export default function Practice({
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (solvedRef.current) return;
+      if (solvedRef.current) {
+        if (e.key === "Enter" && !e.repeat && onNext) {
+          e.preventDefault();
+          onNext();
+        }
+        return;
+      }
       const key = tool.keyFromEvent(e);
       if (key === null) return;
       e.preventDefault();
@@ -91,7 +97,19 @@ export default function Practice({
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [tool, drill, optimal, onSolved]);
+  }, [tool, drill, optimal, onSolved, onNext]);
+
+  // Global capture-phase handler to prevent browser defaults for Ctrl+<letter>
+  // (e.g. Ctrl+O opens File dialog, Ctrl+S saves, etc.)
+  useEffect(() => {
+    function preventBrowserShortcuts(e: KeyboardEvent) {
+      if (e.ctrlKey && e.key.length === 1 && /[a-z]/i.test(e.key)) {
+        e.preventDefault();
+      }
+    }
+    document.addEventListener("keydown", preventBrowserShortcuts, true); // capture phase
+    return () => document.removeEventListener("keydown", preventBrowserShortcuts, true);
+  }, []);
 
   return (
     <div className="flex flex-col gap-4">
@@ -120,7 +138,13 @@ export default function Practice({
         <div className="text-xs text-muted">
           {solved ? (
             <span className="text-green">
-              Solved in {result?.ms}ms with {result?.accuracy}% accuracy.
+              Solved in {result?.ms}ms with {result?.accuracy}% accuracy.{" "}
+              {onNext && (
+                <span className="text-muted">
+                  Press <kbd className="rounded bg-panel px-1 text-foreground">Enter</kbd> to{" "}
+                  {isLast ? "finish" : "continue"}.
+                </span>
+              )}
             </span>
           ) : (
             <span>Start typing — your keystrokes drive the live simulator.</span>

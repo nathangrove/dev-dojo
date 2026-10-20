@@ -56,7 +56,12 @@ export default function LessonPage() {
 
       <section className="flex flex-col gap-4">
         <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted">Practice</h2>
-        <LessonPlayer toolSlug={tool} lesson={lesson} category={category} />
+        <LessonPlayer
+          key={`${tool}/${lesson.slug}`}
+          toolSlug={tool}
+          lesson={lesson}
+          category={category}
+        />
       </section>
     </div>
   );
