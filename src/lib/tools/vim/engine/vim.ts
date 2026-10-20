@@ -432,7 +432,7 @@ function joinLines(state: VimState, count: number): VimState {
   const lines = [...state.lines];
   if (state.row + 1 >= lines.length) return resetPending(state);
   const joinPos = Math.max(0, lines[state.row].replace(/\s+$/, "").length);
-  let r = state.row;
+  const r = state.row;
   for (let i = 0; i < count && r + 1 < lines.length; i++) {
     const cur = lines[r];
     const nxt = lines[r + 1];

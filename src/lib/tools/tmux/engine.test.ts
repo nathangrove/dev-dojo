@@ -14,7 +14,6 @@ import {
   moveDir,
   newWindow,
   nextPane,
-  openChooseTree,
   paneRing,
   renameSession,
   renameWindow,
@@ -22,7 +21,6 @@ import {
   spatialOrder,
   splitActive,
   swapPane,
-  toggleCopyMode,
   toggleZoom,
 } from "./engine";
 import type { TmuxDrill } from "./types";

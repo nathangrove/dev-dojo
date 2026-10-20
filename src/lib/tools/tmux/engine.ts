@@ -117,15 +117,6 @@ function removeLeaf(node: TmuxSplit, targetId: number): TmuxSplit | null {
   return { ...node, children: kids };
 }
 
-function findPane(node: TmuxSplit, paneId: number): TmuxPane | null {
-  if (node.kind === "leaf") return node.paneId === paneId ? makePane(node.paneId) : null;
-  for (const c of node.children) {
-    const p = findPane(c, paneId);
-    if (p) return p;
-  }
-  return null;
-}
-
 function walkSized(
   node: TmuxSplit,
   width: number,
