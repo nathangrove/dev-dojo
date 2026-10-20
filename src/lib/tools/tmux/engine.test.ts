@@ -3,7 +3,9 @@ import {
   activePaneIndex,
   activeWindow,
   activeWindowIndex,
+  attach,
   createInitialTmux,
+  detach,
   evaluateTmuxGoal,
   executeTmuxCommand,
   handleTmuxKey,
@@ -12,9 +14,15 @@ import {
   moveDir,
   newWindow,
   nextPane,
+  openChooseTree,
   paneRing,
+  renameSession,
+  renameWindow,
+  resizeActive,
   spatialOrder,
   splitActive,
+  swapPane,
+  toggleCopyMode,
   toggleZoom,
 } from "./engine";
 import type { TmuxDrill } from "./types";
@@ -208,5 +216,79 @@ describe("goals", () => {
     const s = newWindow(createInitialTmux());
     expect(evaluateTmuxGoal(s, { kind: "windowCount", count: 2 })).toBe(true);
     expect(evaluateTmuxGoal(s, { kind: "activeWindow", index: 1 })).toBe(true);
+  });
+});
+
+describe("resize", () => {
+  it("resizeActive sets the active pane size and persists it", () => {
+    const s = resizeActive(createInitialTmux(), "width", 100);
+    const win = activeWindow(s);
+    expect(win.resized[win.activePaneId].width).toBe(100);
+    expect(evaluateTmuxGoal(s, { kind: "paneWidth", cells: 100 })).toBe(true);
+  });
+
+  it("resize-pane -x runs through the command prompt", () => {
+    const s = executeTmuxCommand(createInitialTmux(), ":resize-pane -x 100");
+    expect(evaluateTmuxGoal(s, { kind: "paneWidth", cells: 100 })).toBe(true);
+  });
+
+  it("resize-pane -y sets the height", () => {
+    const s = executeTmuxCommand(createInitialTmux(), ":resize-pane -y 10");
+    expect(evaluateTmuxGoal(s, { kind: "paneHeight", cells: 10 })).toBe(true);
+  });
+});
+
+describe("swap", () => {
+  it("swapPane next exchanges the active pane with its neighbor", () => {
+    let s = run(createInitialTmux(), ["ctrl+b", "%"]); // ring [0,1], active 1
+    s = swapPane(s, "next"); // active 1 swaps with ring[0]
+    // The panes trade positions; focus follows the active pane, whose id is unchanged.
+    expect(activeWindow(s).activePaneId).toBe(1);
+    expect(spatialOrder(activeWindow(s).layout)).toEqual([1, 0]);
+  });
+});
+
+describe("rename", () => {
+  it("renameWindow updates the active window name", () => {
+    const s = renameWindow(createInitialTmux(), "editor");
+    expect(activeWindow(s).name).toBe("editor");
+    expect(evaluateTmuxGoal(s, { kind: "windowName", name: "editor" })).toBe(true);
+  });
+
+  it("rename-session updates the session name", () => {
+    const s = renameSession(createInitialTmux(), "work");
+    expect(s.session.name).toBe("work");
+    expect(evaluateTmuxGoal(s, { kind: "sessionName", name: "work" })).toBe(true);
+  });
+});
+
+describe("detach / attach", () => {
+  it("detach marks detached and attach restores the session", () => {
+    let s = detach(createInitialTmux());
+    expect(s.attached).toBe(false);
+    expect(evaluateTmuxGoal(s, { kind: "detached" })).toBe(true);
+    s = attach(s);
+    expect(s.attached).toBe(true);
+  });
+});
+
+describe("copy mode", () => {
+  it("C-b [ toggles copy mode on and off", () => {
+    let s = run(createInitialTmux(), ["ctrl+b", "["]);
+    expect(s.copyMode).toBe(true);
+    expect(evaluateTmuxGoal(s, { kind: "copyMode" })).toBe(true);
+    s = run(s, ["ctrl+b", "["]);
+    expect(s.copyMode).toBe(false);
+  });
+});
+
+describe("choose-tree", () => {
+  it("C-b w opens the overlay and a digit picks a window", () => {
+    let s = newWindow(createInitialTmux());
+    s = run(s, ["ctrl+b", "w"]);
+    expect(s.choosingTree).toBe(true);
+    s = handleTmuxKey(s, "0");
+    expect(s.choosingTree).toBe(false);
+    expect(activeWindowIndex(s)).toBe(0);
   });
 });

@@ -27,12 +27,13 @@ export function createInitialState(text: string, name: string = NO_NAME): VimSta
     pendingOp: null,
     count: "",
     pendingG: false,
+    pendingZ: false,
     pendingReplace: false,
     visualAnchor: null,
     echo: "",
     edits: 0,
     buffers: [
-      { id: bufferId, name, lines, modified: false, undoStack: [], redoStack: [] },
+      { id: bufferId, name, lines, original: [...lines], modified: false, undoStack: [], redoStack: [] },
     ],
     windows: [{ id: windowId, bufferId, row: 0, col: 0, desiredCol: 0 }],
     tabs: [{ id: tabId, layout: { kind: "leaf", windowId }, activeWindowId: windowId }],
@@ -50,6 +51,25 @@ export function createInitialState(text: string, name: string = NO_NAME): VimSta
     pendingMarkJump: false,
     markJumpExact: false,
     activeRegister: null,
+    pendingFind: null,
+    lastFind: null,
+    pendingTextObject: null,
+    searchPattern: "",
+    searchForward: true,
+    pendingCase: null,
+    jumplist: [],
+    jumpIndex: 0,
+    topRow: 0,
+    pendingRecord: false,
+    recording: null,
+    recordingKeys: [],
+    macros: {},
+    pendingPlay: false,
+    lastMacro: null,
+    lastChange: null,
+    cmdKeys: null,
+    cmdEdited: false,
+    replaying: false,
   };
 }
 
@@ -144,9 +164,14 @@ export function loadWindow(state: VimState, windowId: number): VimState {
     pendingOp: null,
     count: "",
     pendingG: false,
+    pendingZ: false,
     pendingReplace: false,
     pendingCtrlW: false,
     activeRegister: null,
+    pendingFind: null,
+    pendingTextObject: null,
+    pendingRecord: false,
+    pendingPlay: false,
     cmdline: null,
     echo: "",
   };
@@ -180,7 +205,7 @@ export function addSplit(state: VimState, dir: "row" | "col", file?: string): Vi
       nextBufferId += 1;
       buffers = [
         ...buffers,
-        { id: bufferId, name: file, lines: [""], modified: false, undoStack: [], redoStack: [] },
+        { id: bufferId, name: file, lines: [""], original: [""], modified: false, undoStack: [], redoStack: [] },
       ];
     }
   }
@@ -286,7 +311,15 @@ export function openFile(state: VimState, name: string, text = ""): { state: Vim
   const bufferId = state.nextBufferId;
   const buffers = [
     ...state.buffers,
-    { id: bufferId, name, lines: text.split("\n"), modified: false, undoStack: [], redoStack: [] },
+    {
+      id: bufferId,
+      name,
+      lines: text.split("\n"),
+      original: text.split("\n"),
+      modified: false,
+      undoStack: [],
+      redoStack: [],
+    },
   ];
   return { state: { ...state, buffers, nextBufferId: bufferId + 1 }, bufferId };
 }
@@ -319,7 +352,7 @@ export function newTab(state: VimState, file?: string): VimState {
       nextBufferId += 1;
       buffers = [
         ...buffers,
-        { id: bufferId, name: file, lines: [""], modified: false, undoStack: [], redoStack: [] },
+        { id: bufferId, name: file, lines: [""], original: [""], modified: false, undoStack: [], redoStack: [] },
       ];
     }
   } else {
@@ -327,7 +360,7 @@ export function newTab(state: VimState, file?: string): VimState {
     nextBufferId += 1;
     buffers = [
       ...buffers,
-      { id: bufferId, name: NO_NAME, lines: [""], modified: false, undoStack: [], redoStack: [] },
+      { id: bufferId, name: NO_NAME, lines: [""], original: [""], modified: false, undoStack: [], redoStack: [] },
     ];
   }
   const windowId = s.nextWindowId;

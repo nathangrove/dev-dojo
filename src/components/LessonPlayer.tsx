@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { type Category, type Lesson, allLessons } from "@/lib/dojo";
 import { useProgress, computeLessonProgress } from "@/lib/progress";
@@ -80,14 +80,14 @@ export default function LessonPlayer({ toolSlug, lesson, category }: LessonPlaye
             Practice again
           </button>
           <Link
-            href={`/${toolSlug}/category/${category.slug}`}
+            to={`/${toolSlug}/category/${category.slug}`}
             className="rounded-md px-2 py-2 text-sm text-muted transition-colors hover:text-foreground"
           >
             ← {category.title}
           </Link>
           {nextRef && (
             <Link
-              href={`/${toolSlug}/lesson/${nextRef.lesson.slug}`}
+              to={`/${toolSlug}/lesson/${nextRef.lesson.slug}`}
               className="ml-auto rounded-md bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
             >
               Next: {nextRef.lesson.title} →

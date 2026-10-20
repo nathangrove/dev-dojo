@@ -326,3 +326,42 @@ describe("evaluateGoal", () => {
     expect(evaluateGoal(s, { kind: "openFiles", names: ["a.txt"] })).toBe(false);
   });
 });
+
+describe("ex: substitute", () => {
+  it(":s replaces the first match on the current line", () => {
+    const s = keys(createState("cat and cat"), ex("s/cat/dog/"));
+    expect(stateText(s)).toBe("dog and cat");
+  });
+
+  it(":s with g replaces every match on the line", () => {
+    const s = keys(createState("cat and cat"), ex("s/cat/dog/g"));
+    expect(stateText(s)).toBe("dog and dog");
+  });
+
+  it(":%s replaces across the whole file", () => {
+    const s = keys(createState("TODO one\nTODO two\nthree"), ex("%s/TODO/DONE/g"));
+    expect(stateText(s)).toBe("DONE one\nDONE two\nthree");
+  });
+
+  it("is undoable", () => {
+    const s = keys(createState("cat"), [...ex("s/cat/dog/"), "u"]);
+    expect(stateText(s)).toBe("cat");
+  });
+
+  it("reports when the pattern is missing", () => {
+    const s = keys(createState("cat"), ex("s/dog/bird/"));
+    expect(stateText(s)).toBe("cat");
+    expect(s.statusMessage).toContain("E486");
+  });
+});
+
+describe("ex: reload", () => {
+  it(":e! discards unsaved edits", () => {
+    let s = createState("original");
+    s = keys(s, ["x"]);
+    expect(activeBuffer(s).modified).toBe(true);
+    s = keys(s, ex("e!"));
+    expect(stateText(s)).toBe("original");
+    expect(activeBuffer(s).modified).toBe(false);
+  });
+});

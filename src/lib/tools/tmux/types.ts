@@ -25,16 +25,27 @@ export interface TmuxWindow {
   panes: TmuxPane[];
   activePaneId: number;
   zoomed: boolean;
+  /**
+   * per-pane size overrides in cells, from resize-pane -x / -y. Any pane
+   * missing here takes its half-split size computed from the layout tree.
+   */
+  resized: Record<number, { width: number; height: number }>;
 }
 
 export interface TmuxSession {
   id: number;
+  /** session name for `rename-session` / attach goals (default "0") */
+  name: string;
   windows: TmuxWindow[];
   activeWindowId: number;
 }
 
 export interface TmuxState {
+  /** false after `C-b d` — later attached with a new-session command */
+  attached: boolean;
   session: TmuxSession;
+  /** sessions we can re-attach to (name + id), for s / attach-session drills */
+  detached: { id: number; name: string }[];
   /** true immediately after the prefix key (Ctrl-b) */
   prefix: boolean;
   /** command prompt text after `:` (including the colon); null when closed */
@@ -43,6 +54,14 @@ export interface TmuxState {
   echo: string;
   /** after `x` — waiting for a y/n confirmation */
   pendingKill: boolean;
+  /** after `[` — viewport-style copy mode (C-b q leaves) */
+  copyMode: boolean;
+  /** after `C-b w` — choose-tree overlay; number keys pick a window */
+  choosingTree: boolean;
+  /** after `C-b q` — briefly show pane numbers; any key dismisses */
+  showPaneNumbers: boolean;
+  /** rename prompt target after `,` (window) or `$` (session) */
+  renaming: "window" | "session" | null;
   /** pane to toggle back to with `;` */
   lastPaneId: number | null;
   nextPaneId: number;
@@ -57,7 +76,16 @@ export type TmuxGoal =
   | { kind: "activePane"; index: number }
   /** 0-based window index in the session */
   | { kind: "activeWindow"; index: number }
-  | { kind: "zoomed" };
+  /** direction of the split that holds the active pane */
+  | { kind: "splitDir"; dir: "row" | "col" }
+  | { kind: "zoomed" }
+  /** size of the active pane in cells */
+  | { kind: "paneWidth"; cells: number }
+  | { kind: "paneHeight"; cells: number }
+  | { kind: "sessionName"; name: string }
+  | { kind: "windowName"; name: string }
+  | { kind: "detached" }
+  | { kind: "copyMode" };
 
 export interface TmuxDrill extends BaseDrill {
   /** how many panes to open the single window with (default 1) */
@@ -66,5 +94,11 @@ export interface TmuxDrill extends BaseDrill {
   activePane?: number;
   /** how many windows to open initially (default 1) */
   initialWindows?: number;
+  /** 0-based index of the initially active window (default 0) */
+  activeWindow?: number;
+  /** session name for the seeded session (default "0") */
+  sessionName?: string;
+  /** name the first window starts with (default "bash") */
+  windowName?: string;
   goal: TmuxGoal;
 }

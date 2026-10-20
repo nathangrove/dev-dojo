@@ -27,7 +27,10 @@ export interface Lesson<D extends BaseDrill = BaseDrill> {
 export interface Category<D extends BaseDrill = BaseDrill> {
   slug: string;
   title: string;
+  /** one-line summary shown on track home cards */
   blurb: string;
+  /** longer "why it matters" explanation shown on the category page */
+  overview: string;
   accent: string;
   lessons: Lesson<D>[];
 }

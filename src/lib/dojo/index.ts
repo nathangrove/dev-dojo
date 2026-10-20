@@ -1,12 +1,13 @@
 import type { BaseDrill, Category, LessonRef, Track } from "./types";
 import { VIM_TRACK } from "@/lib/tools/vim";
 import { TMUX_TRACK } from "@/lib/tools/tmux";
+import { GIT_TRACK } from "@/lib/tools/git";
 
 export * from "./types";
 export * from "./tokens";
 
 /** Every track, in display order. */
-export const TRACKS: Track[] = [VIM_TRACK, TMUX_TRACK];
+export const TRACKS: Track[] = [VIM_TRACK, TMUX_TRACK, GIT_TRACK];
 
 export function allTracks(): Track[] {
   return TRACKS;

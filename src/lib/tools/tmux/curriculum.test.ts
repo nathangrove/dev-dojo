@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseKeys, solutionLength } from "@/lib/dojo/tokens";
 import { createInitialTmux, evaluateTmuxGoal, handleTmuxKey } from "./engine";
-import type { TmuxState } from "./types";
+import type { TmuxDrill, TmuxState } from "./types";
 import { TMUX_CATEGORIES } from "./curriculum";
 
 const drills = TMUX_CATEGORIES.flatMap((category) =>
@@ -9,6 +9,10 @@ const drills = TMUX_CATEGORIES.flatMap((category) =>
     lesson.drills.map((drill) => ({ category, lesson, drill })),
   ),
 );
+
+function buildState(drill: TmuxDrill): TmuxState {
+  return createInitialTmux(drill);
+}
 
 function applySolution(state: TmuxState, solution: string): TmuxState {
   let s = state;
@@ -18,7 +22,7 @@ function applySolution(state: TmuxState, solution: string): TmuxState {
 
 describe("tmux curriculum validity", () => {
   it("has a healthy number of drills", () => {
-    expect(drills.length).toBeGreaterThanOrEqual(12);
+    expect(drills.length).toBeGreaterThanOrEqual(20);
   });
 
   it("uses unique drill ids and lesson slugs", () => {
@@ -28,7 +32,7 @@ describe("tmux curriculum validity", () => {
     expect(new Set(lessonSlugs).size).toBe(lessonSlugs.length);
   });
 
-  it("every drill has a goal", () => {
+  it("every drill has exactly one goal", () => {
     for (const { drill } of drills) {
       expect(drill.goal, `drill ${drill.id}`).toBeDefined();
     }
@@ -37,7 +41,7 @@ describe("tmux curriculum validity", () => {
   it("is not already solved before the user does anything", () => {
     for (const { drill } of drills) {
       if (drill.mustUse) continue;
-      const state = createInitialTmux(drill);
+      const state = buildState(drill);
       expect(
         evaluateTmuxGoal(state, drill.goal),
         `drill ${drill.id} starts solved`,
@@ -47,7 +51,7 @@ describe("tmux curriculum validity", () => {
 
   it("every canonical solution reaches its goal", () => {
     for (const { drill } of drills) {
-      const state = applySolution(createInitialTmux(drill), drill.solution);
+      const state = applySolution(buildState(drill), drill.solution);
       expect(
         evaluateTmuxGoal(state, drill.goal),
         `drill ${drill.id} solution did not reach goal (${drill.solution})`,

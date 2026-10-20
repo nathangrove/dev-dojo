@@ -14,10 +14,10 @@ function keyFromEvent(e: KeyboardEvent): string | null {
   if (e.key === "Escape") return "Escape";
   if (e.key === "Enter") return "Enter";
   if (e.key === "Backspace") return "Backspace";
+  if (e.ctrlKey && e.key === "Tab") return "ctrl+i"; // browsers report Ctrl+I as Tab
   if (e.key === "Tab") return "Tab";
-  if (e.ctrlKey && (e.key === "r" || e.key === "R")) return "ctrl+r";
-  if (e.ctrlKey && (e.key === "w" || e.key === "W")) return "ctrl+w";
-  if (e.ctrlKey || e.altKey || e.shiftKey) return null;
+  if (e.ctrlKey && e.key.length === 1 && /[a-z]/i.test(e.key)) return `ctrl+${e.key.toLowerCase()}`;
+  if (e.ctrlKey || e.altKey) return null;
   if (e.key.length === 1) return e.key;
   return null;
 }

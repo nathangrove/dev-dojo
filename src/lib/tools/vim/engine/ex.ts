@@ -28,8 +28,74 @@ function writeBuffer(state: VimState, file?: string): VimState {
   if (buf.name === NO_NAME && !file) {
     return msg(s, "E32: No file name");
   }
-  const buffers = s.buffers.map((b) => (b.id === buf.id ? { ...b, modified: false } : b));
+  const buffers = s.buffers.map((b) =>
+    b.id === buf.id ? { ...b, original: [...buf.lines], modified: false } : b,
+  );
   return msg({ ...s, buffers }, `"${buf.name}" ${buf.lines.length}L written`);
+}
+
+/** `:e!` — reload the active buffer from disk, dropping unsaved edits. */
+function reloadBuffer(state: VimState): VimState {
+  const win = activeWindow(state);
+  const buf = findBuffer(state, win.bufferId);
+  if (!buf) return state;
+  const lines = [...buf.original];
+  const buffers = state.buffers.map((b) =>
+    b.id === buf.id ? { ...b, lines, modified: false, undoStack: [], redoStack: [] } : b,
+  );
+  return msg(
+    { ...state, buffers, lines, row: 0, col: 0, desiredCol: 0, undoStack: [], redoStack: [] },
+    `"${buf.name}" reloaded`,
+  );
+}
+
+/** `:s/old/new/[g]` and `:%s/old/new/[g]`. `spec` starts at the delimiter. */
+function substitute(state: VimState, spec: string, wholeFile: boolean): VimState {
+  const delim = spec[0];
+  if (!delim || /[A-Za-z0-9\\]/.test(delim)) {
+    return msg(state, "E492: Not an editor command: s");
+  }
+  const parts = spec.slice(1).split(delim);
+  const search = parts[0] ?? "";
+  const replacement = parts[1] ?? "";
+  const flags = parts[2] ?? "";
+  if (!search) return msg(state, "E486: Pattern not found");
+
+  const global = flags.includes("g");
+  const lines = [...state.lines];
+  const rows = wholeFile ? lines.map((_, i) => i) : [state.row];
+  let count = 0;
+
+  for (const r of rows) {
+    const line = lines[r];
+    if (!line.includes(search)) continue;
+    if (global) {
+      count += line.split(search).length - 1;
+      lines[r] = line.split(search).join(replacement);
+    } else {
+      const at = line.indexOf(search);
+      count += 1;
+      lines[r] = line.slice(0, at) + replacement + line.slice(at + search.length);
+    }
+  }
+
+  if (count === 0) return msg(state, "E486: Pattern not found");
+  const snapshot = { lines: [...state.lines], row: state.row, col: state.col };
+  const row = Math.min(state.row, lines.length - 1);
+  const col = Math.min(state.col, Math.max(0, lines[row].length - 1));
+  return msg(
+    {
+      ...state,
+      lines,
+      row,
+      col,
+      desiredCol: col,
+      undoStack: [...state.undoStack, snapshot],
+      redoStack: [],
+      edits: state.edits + 1,
+    },
+    `${count} substitution${count === 1 ? "" : "s"}`,
+  );
 }
 
 function renameActive(state: VimState, file: string): VimState {
@@ -113,6 +179,19 @@ export function executeEx(state: VimState, input: string): VimState {
     rawCmd = rawCmd.slice(0, -1);
   }
 
+  // `:%s/old/new/g` — the % range runs the command on every line
+  let wholeFile = false;
+  if (rawCmd.startsWith("%")) {
+    wholeFile = true;
+    rawCmd = rawCmd.slice(1);
+    if (!rawCmd) return msg(state, "");
+  }
+  // substitute: `s/old/new/` or `s!old!new!`
+  if (rawCmd === "s") return substitute(state, arg, wholeFile);
+  if (rawCmd.length > 1 && rawCmd[0] === "s" && !/[A-Za-z0-9]/.test(rawCmd[1])) {
+    return substitute(state, rawCmd.slice(1), wholeFile);
+  }
+
   switch (rawCmd) {
     case "w":
       return writeBuffer(state, arg || undefined);
@@ -139,7 +218,10 @@ export function executeEx(state: VimState, input: string): VimState {
     }
     case "e":
     case "edit":
-      if (!arg) return msg(state, "E32: No file name");
+      if (!arg) {
+        if (bang) return reloadBuffer(state);
+        return msg(state, "E32: No file name");
+      }
       return editFile(state, arg, bang);
     case "sp":
     case "split":
@@ -217,7 +299,7 @@ export function executeEx(state: VimState, input: string): VimState {
 /** Ex commands exposed for autocomplete / hints. */
 export const EX_COMMANDS = [
   "w", "wa", "wq", "x", "q", "q!", "wqa",
-  "e", "sp", "vsp", "bn", "bp", "ls", "bd",
+  "e", "e!", "sp", "vsp", "s", "%s", "bn", "bp", "ls", "bd",
   "tabnew", "tabclose", "tabnext", "tabprevious",
   "reg", "marks",
 ] as const;

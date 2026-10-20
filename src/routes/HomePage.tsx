@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { TRACKS, allLessons, totalDrills, trackDrillIds } from "@/lib/dojo";
 import { useProgress, computeLessonProgress } from "@/lib/progress";
 import ProgressBar from "@/components/ProgressBar";
@@ -9,7 +7,10 @@ export default function HomePage() {
   const { progress } = useProgress();
   const lessons = allLessons();
 
-  const overall = computeLessonProgress(progress, lessons.flatMap((r) => r.lesson.drills.map((d) => d.id)));
+  const overall = computeLessonProgress(
+    progress,
+    lessons.flatMap((r) => r.lesson.drills.map((d) => d.id)),
+  );
 
   const nextLesson =
     lessons.find((r) => {
@@ -33,12 +34,12 @@ export default function HomePage() {
         </h1>
         <p className="max-w-xl text-base text-muted">
           Real simulators that run in your browser, focused lessons grouped by skill, and hands-on
-          drills with instant feedback. Start with Vim, tmux is next.
+          drills with instant feedback. Start with Vim, tmux, or Git.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           {nextLesson && (
             <Link
-              href={`/${nextLesson.track.slug}/lesson/${nextLesson.lesson.slug}`}
+              to={`/${nextLesson.track.slug}/lesson/${nextLesson.lesson.slug}`}
               className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
             >
               {overall.completed > 0 ? "Continue learning" : "Start learning"}
@@ -98,7 +99,7 @@ export default function HomePage() {
                 {card}
               </div>
             ) : (
-              <Link key={track.slug} href={`/${track.slug}`} className="block h-full">
+              <Link key={track.slug} to={`/${track.slug}`} className="block h-full">
                 {card}
               </Link>
             );

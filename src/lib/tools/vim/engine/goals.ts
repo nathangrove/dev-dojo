@@ -33,6 +33,8 @@ export function evaluateGoal(state: VimState, goal: VimGoal): boolean {
         state.row === goal.row &&
         state.col === goal.col
       );
+    case "topRow":
+      return state.topRow === goal.row;
     default:
       return false;
   }
@@ -64,6 +66,8 @@ export function describeGoal(goal: VimGoal): string {
       return `Register "${goal.name}" holds: ${goal.text}`;
     case "cursorInFile":
       return `Cursor is in ${goal.name} at line ${goal.row + 1}, col ${goal.col}`;
+    case "topRow":
+      return `Screen starts at line ${goal.row + 1}`;
     default:
       return "";
   }

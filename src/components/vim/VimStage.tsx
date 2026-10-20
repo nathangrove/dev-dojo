@@ -3,6 +3,7 @@
 import type { VimState } from "@/lib/tools/vim/engine/types";
 import type { VimDrill } from "@/lib/tools/vim/types";
 import { describeGoal } from "@/lib/tools/vim/engine/goals";
+import { SCREEN_ROWS } from "@/lib/tools/vim/engine/vim";
 import VimBuffer from "./VimBuffer";
 import SessionView from "./SessionView";
 
@@ -43,8 +44,15 @@ export default function VimStage({ state, drill }: VimStageProps) {
           visualAnchor={state.visualAnchor}
           showCursor
           filename="practice.txt"
-          echo={state.mode === "normal" ? state.echo : ""}
+          echo={
+            state.mode === "cmdline"
+              ? (state.cmdline ?? "")
+              : state.mode === "normal"
+                ? state.echo
+                : ""
+          }
           tone="live"
+          viewport={state.lines.length > SCREEN_ROWS ? { top: state.topRow, height: SCREEN_ROWS } : undefined}
         />
       </div>
       <div>

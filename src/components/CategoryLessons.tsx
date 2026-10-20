@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import type { Category } from "@/lib/dojo";
 import { useProgress, computeLessonProgress } from "@/lib/progress";
 import ProgressBar from "./ProgressBar";
@@ -21,7 +21,7 @@ export default function CategoryLessons({
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
         <Link
-          href={`/${toolSlug}`}
+          to={`/${toolSlug}`}
           className="w-fit text-xs text-muted transition-colors hover:text-foreground"
         >
           ← All skills
@@ -31,6 +31,7 @@ export default function CategoryLessons({
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">{category.title}</h1>
         </div>
         <p className="max-w-xl text-sm text-muted">{category.blurb}</p>
+        <p className="max-w-2xl text-sm text-foreground/80">{category.overview}</p>
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between font-mono text-xs text-muted">
             <span>
@@ -52,7 +53,7 @@ export default function CategoryLessons({
           return (
             <li key={lesson.slug}>
               <Link
-                href={`/${toolSlug}/lesson/${lesson.slug}`}
+                to={`/${toolSlug}/lesson/${lesson.slug}`}
                 className="group flex items-center gap-4 rounded-xl border border-border bg-panel p-4 transition-colors hover:border-accent/60"
               >
                 <span className="font-mono text-sm text-muted">{String(i + 1).padStart(2, "0")}</span>

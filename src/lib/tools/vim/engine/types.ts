@@ -1,5 +1,8 @@
 export type Mode = "normal" | "insert" | "visual" | "visual-line" | "cmdline";
 
+/** Character-search motions: f/t forward, F/T backward. */
+export type FindKind = "f" | "t" | "F" | "T";
+
 export interface Pos {
   row: number;
   col: number;
@@ -21,6 +24,8 @@ export interface Buffer {
   id: number;
   name: string;
   lines: string[];
+  /** the text last written to (or loaded from) disk; `:e!` restores it */
+  original: string[];
   modified: boolean;
   undoStack: Snapshot[];
   redoStack: Snapshot[];
@@ -66,9 +71,11 @@ export interface VimState {
   register: Register | null;
   undoStack: Snapshot[];
   redoStack: Snapshot[];
-  pendingOp: "d" | "c" | "y" | null;
+  pendingOp: "d" | "c" | "y" | ">" | "<" | null;
   count: string;
   pendingG: boolean;
+  /** after `z` — next key picks the scroll command (zz / zt / zb) */
+  pendingZ: boolean;
   pendingReplace: boolean;
   visualAnchor: Pos | null;
   echo: string;
@@ -107,4 +114,40 @@ export interface VimState {
   pendingMarkJump: boolean;
   /** true when the jump was `` ` `` (exact column) vs `'` (first non-blank) */
   markJumpExact: boolean;
+  /** after f/t/F/T — the next printable key picks the target character */
+  pendingFind: FindKind | null;
+  /** last f/t/F/T command, replayed by `;` and reversed by `,` */
+  lastFind: { kind: FindKind; char: string } | null;
+  /** after i/a with an operator or selection pending — next key picks the object */
+  pendingTextObject: "i" | "a" | null;
+  /** last search pattern and whether it was forward (`/`) or backward (`?`) */
+  searchPattern: string;
+  searchForward: boolean;
+  /** after gU / gu / g~ — next key picks the case operator target */
+  pendingCase: "upper" | "lower" | "toggle" | null;
+  /** jump list for Ctrl-o / Ctrl-i */
+  jumplist: Pos[];
+  jumpIndex: number;
+  /** top row of the simulated screen (viewport) */
+  topRow: number;
+  /** after q — the next key picks the register to record a macro into */
+  pendingRecord: boolean;
+  /** register currently being recorded (null when not recording) */
+  recording: string | null;
+  /** keys captured for the macro in progress */
+  recordingKeys: string[];
+  /** recorded macros, keyed by register name */
+  macros: Record<string, string[]>;
+  /** after @ — the next key picks the macro to play */
+  pendingPlay: boolean;
+  /** last played macro, replayed by @@ */
+  lastMacro: string | null;
+  /** keys of the last change, replayed by `.` */
+  lastChange: string[] | null;
+  /** keys of the normal-mode command currently being assembled */
+  cmdKeys: string[] | null;
+  /** whether the command in progress has mutated the buffer */
+  cmdEdited: boolean;
+  /** true while replaying keys from `.` or a macro, to avoid re-recording */
+  replaying: boolean;
 }

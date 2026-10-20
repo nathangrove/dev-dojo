@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import type { Track } from "@/lib/dojo";
 import { trackDrillIds } from "@/lib/dojo";
 import { useProgress, computeLessonProgress } from "@/lib/progress";
@@ -13,7 +13,7 @@ export default function TrackHome({ track }: { track: Track }) {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
-        <Link href="/" className="w-fit text-xs text-muted transition-colors hover:text-foreground">
+        <Link to="/" className="w-fit text-xs text-muted transition-colors hover:text-foreground">
           ← All tools
         </Link>
         <div className="flex items-center gap-3">
@@ -48,7 +48,7 @@ export default function TrackHome({ track }: { track: Track }) {
             return (
               <Link
                 key={category.slug}
-                href={`/${track.slug}/category/${category.slug}`}
+                to={`/${track.slug}/category/${category.slug}`}
                 className="group flex flex-col gap-3 rounded-xl border border-border bg-panel p-5 transition-colors hover:border-accent/60"
               >
                 <div className="flex items-center justify-between">

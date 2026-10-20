@@ -25,6 +25,8 @@ interface VimBufferProps {
   active?: boolean;
   /** show a trailing `+` next to the filename */
   modified?: boolean;
+  /** simulate a screen: rows outside [top, top+height) are dimmed */
+  viewport?: { top: number; height: number };
 }
 
 const MODE_COLOR: Record<Mode, string> = {
@@ -79,6 +81,7 @@ export default function VimBuffer({
   tone = "live",
   active = false,
   modified = false,
+  viewport,
 }: VimBufferProps) {
   const sel = selectionCells(mode, visualAnchor, row, col);
   const gutterWidth = String(lines.length).length;
@@ -146,8 +149,13 @@ export default function VimBuffer({
       ) : null}
 
       <div className="flex-1 overflow-x-auto px-2 py-2">
-        {cells.map((lineCells, r) => (
-          <div key={r} className="flex min-h-6 items-stretch">
+        {cells.map((lineCells, r) => {
+          const offscreen = viewport !== undefined && (r < viewport.top || r >= viewport.top + viewport.height);
+          return (
+          <div
+            key={r}
+            className={`flex min-h-6 items-stretch ${offscreen ? "opacity-35" : ""}`}
+          >
             <span
               className="mr-2 shrink-0 select-none pr-1 text-right text-muted/60 tabular-nums"
               style={{ minWidth: `${gutterWidth + 1}ch` }}
@@ -179,7 +187,8 @@ export default function VimBuffer({
               )}
             </span>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-3 border-t border-border px-3 py-1.5 text-[11px] text-muted">

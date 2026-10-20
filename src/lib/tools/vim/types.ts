@@ -19,7 +19,8 @@ export type VimGoal =
   | { kind: "tabCount"; count: number }
   | { kind: "activeTab"; index: number }
   | { kind: "register"; name: string; text: string }
-  | { kind: "cursorInFile"; name: string; row: number; col: number };
+  | { kind: "cursorInFile"; name: string; row: number; col: number }
+  | { kind: "topRow"; row: number };
 
 export interface VimDrill extends BaseDrill {
   initial: string;
