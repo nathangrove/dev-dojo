@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getLesson } from "@/lib/dojo";
-import Markdownish from "@/components/Markdownish";
+import Markdownish, { renderTagline } from "@/components/Markdownish";
 import LessonPlayer from "@/components/LessonPlayer";
 import NotFound from "@/routes/NotFound";
 
@@ -30,7 +30,7 @@ export default function LessonPage() {
         </Link>
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">{lesson.title}</h1>
-          <span className="font-mono text-sm text-muted">{lesson.tagline}</span>
+          {renderTagline(lesson.tagline)}
         </div>
       </div>
 

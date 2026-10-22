@@ -28,4 +28,11 @@ export default defineConfig([
       "react-refresh/only-export-components": "off",
     },
   },
+  {
+    // Markdownish exports a helper (renderTagline) alongside the component.
+    files: ["src/components/Markdownish.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
 ]);

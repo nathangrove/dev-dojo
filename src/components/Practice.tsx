@@ -34,6 +34,7 @@ export default function Practice({
   const [solved, setSolved] = useState(false);
   const [hintShown, setHintShown] = useState(false);
   const [result, setResult] = useState<AttemptResult | null>(null);
+  const [blockedKey, setBlockedKey] = useState<string | null>(null);
 
   const engineRef = useRef<unknown>(tool.createInitial(drill));
   const usedRef = useRef<Set<string>>(new Set());
@@ -70,7 +71,14 @@ export default function Practice({
         return;
       }
       const key = tool.keyFromEvent(e);
-      if (key === null) return;
+      if (key === null) {
+        // Detect Ctrl+W and other browser-captured shortcuts that keyFromEvent returns null for
+        if (e.ctrlKey && e.key.length === 1 && /[a-z]/i.test(e.key)) {
+          setBlockedKey(`Ctrl+${e.key.toUpperCase()}`);
+          setTimeout(() => setBlockedKey(null), 2500);
+        }
+        return;
+      }
       e.preventDefault();
 
       if (startRef.current === null) startRef.current = performance.now();
@@ -100,15 +108,20 @@ export default function Practice({
   }, [tool, drill, optimal, onSolved, onNext]);
 
   // Global capture-phase handler to prevent browser defaults for Ctrl+<letter>
-  // (e.g. Ctrl+O opens File dialog, Ctrl+S saves, etc.)
+  // (e.g. Ctrl+W closes tab, Ctrl+O opens File dialog, Ctrl+S saves, etc.)
   useEffect(() => {
     function preventBrowserShortcuts(e: KeyboardEvent) {
       if (e.ctrlKey && e.key.length === 1 && /[a-z]/i.test(e.key)) {
         e.preventDefault();
       }
     }
-    document.addEventListener("keydown", preventBrowserShortcuts, true); // capture phase
-    return () => document.removeEventListener("keydown", preventBrowserShortcuts, true);
+    // Capture phase on both window and document for maximum coverage
+    window.addEventListener("keydown", preventBrowserShortcuts, true);
+    document.addEventListener("keydown", preventBrowserShortcuts, true);
+    return () => {
+      window.removeEventListener("keydown", preventBrowserShortcuts, true);
+      document.removeEventListener("keydown", preventBrowserShortcuts, true);
+    };
   }, []);
 
   return (
@@ -133,6 +146,18 @@ export default function Practice({
       <p className="text-sm text-foreground/90">{drill.prompt}</p>
 
       <Stage state={state} drill={drill} />
+
+      {blockedKey && (
+        <div
+          className="fixed bottom-4 right-4 z-50 rounded-lg border border-orange/40 bg-orange/10 px-4 py-3 text-xs text-orange animate-in slide-in-from-right"
+          role="status"
+        >
+          <strong>{blockedKey}</strong> is intercepted by the browser — it won't reach the simulator.
+          {tool.slug === "vim" && blockedKey === "Ctrl+W" && (
+            <span className="ml-2"> In Vim, use <code className="font-mono">:split</code> / <code className="font-mono">:vsplit</code> instead.</span>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-panel-2 px-4 py-3">
         <div className="text-xs text-muted">

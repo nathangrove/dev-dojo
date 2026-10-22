@@ -1,5 +1,28 @@
 import type { ReactNode } from "react";
 
+const KEY_TOKEN_RE = /<[A-Za-z0-9-]+>/g;
+
+function renderKeys(text: string): ReactNode[] {
+  const parts = text.split(KEY_TOKEN_RE);
+  const tokens = text.match(KEY_TOKEN_RE) ?? [];
+  return parts.map((part, i) => {
+    const token = tokens[i];
+    return (
+      <>
+        {part}
+        {token && (
+          <code
+            key={i}
+            className="rounded bg-panel-2 px-1.5 py-0.5 font-mono text-[0.85em] text-cyan"
+          >
+            {token}
+          </code>
+        )}
+      </>
+    );
+  });
+}
+
 function renderInline(text: string): ReactNode[] {
   const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
@@ -22,6 +45,10 @@ function renderInline(text: string): ReactNode[] {
     }
     return <span key={i}>{part}</span>;
   });
+}
+
+export function renderTagline(text: string): ReactNode {
+  return <span className="font-mono text-sm text-muted">{renderKeys(text)}</span>;
 }
 
 export default function Markdownish({ text }: { text: string }) {
